@@ -1,0 +1,7 @@
+# Audio-Daten und Datenbanken ignorieren
+data/
+*.mp3
+*.wav
+*.pkl
+mir_env/
+.ipynb_checkpoints/
