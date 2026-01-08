@@ -231,12 +231,12 @@ def write_csv(path: str, rows: List[Row]):
 
 
 def main():
-    # ---- load queries
+    # load queries
     queries = collect_queries(QUERY_ROOT)
     for dtype, qfiles in queries.items():
         print(f"{dtype}: {len(qfiles)} queries found", flush=True)
 
-    # ---- load Task-2 DB
+    # load Task-2 DB
     db_all = load_db_from_pickle(DB_PKL_PATH)
 
     cfg_names = list(db_all.keys())
