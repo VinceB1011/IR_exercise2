@@ -1,3 +1,5 @@
+from scipy import ndimage
+import numpy as np
 
 def get_peaks(Y, k, t):
     size = (2*k + 1, 2*t + 1)

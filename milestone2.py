@@ -32,7 +32,7 @@ def run_indexing(config_name, dt_min, dt_max, df_max, fan_out):
         print(f"\n[{song_id+1}/{len(song_files)}] Processing: {song}")
         print(f"  > Duration: {duration:.2f}s")
 
-        peaks = get_peaks(Y, 12, 15)
+        peaks = get_peaks(Y, 18, 15)
         print(f"  > Peaks found: {len(peaks)} (Density: {len(peaks)/duration:.2f} peaks/s)")
         pairs = generate_hashes_from_peaks(peaks, dt_min, dt_max, df_max, fan_out)
 
@@ -65,4 +65,5 @@ def main():
     for name, t_min, t_max, f_max, fan in configs:
         run_indexing(name, t_min, t_max, f_max, fan)
 
-main()
+if __name__ == "__main__":
+    main()
