@@ -12,6 +12,7 @@ import numpy as np
 import librosa
 import scipy.ndimage as ndimage
 
+from utils import get_peaks, generate_hashes_from_peaks
 
 # ============================================================
 # PATHS (edit if needed)
@@ -25,6 +26,7 @@ DB_PKLS = {
     "wide_t": "db_wide_t.pkl",
     "wide_f": "db_wide_f.pkl",
     "dense": "db_dense.pkl",
+    "super_dense": "db_super_dense.pkl"
 }
 
 # ============================================================
@@ -78,50 +80,8 @@ def collect_queries(query_root: str) -> Dict[str, List[str]]:
 def stft_mag(path: str, duration: Optional[float]) -> np.ndarray:
     y, _ = librosa.load(path, sr=SR, mono=True, duration=duration)
     X = librosa.stft(y, n_fft=N_FFT, hop_length=HOP, win_length=N_FFT, window="hann")
-    Y = np.abs(X[:BIN_MAX, :])
+    Y = np.abs(X)
     return Y
-
-def get_peaks(Y: np.ndarray, k: int, t: int, thresh: float) -> np.ndarray:
-    size = (2 * k + 1, 2 * t + 1)
-    mx = ndimage.maximum_filter(Y, size=size, mode="constant")
-    cmap = (Y == mx) & (Y > thresh)
-    return np.argwhere(cmap)  # rows: [freq_bin, time_bin]
-
-def generate_hashes_from_peaks(
-    peaks: np.ndarray,
-    dt_min: int,
-    dt_max: int,
-    df_max: int,
-    fan_out: int,
-) -> List[Tuple[int, int]]:
-    """
-    Returns list of (hash_32, t1) where t1 is anchor time (frame index).
-    Hash packs: f1 (10 bits) | f2 (10 bits) | dt (12 bits)
-    """
-    if peaks.size == 0:
-        return []
-
-    peaks = peaks[peaks[:, 1].argsort()]  # sort by time
-    pairs: List[Tuple[int, int]] = []
-
-    for i in range(len(peaks)):
-        f1, t1 = int(peaks[i, 0]), int(peaks[i, 1])
-        count = 0
-
-        for j in range(i + 1, len(peaks)):
-            f2, t2 = int(peaks[j, 0]), int(peaks[j, 1])
-            dt = t2 - t1
-            if dt > dt_max:
-                break  # because sorted by time
-
-            if dt_min <= dt <= dt_max and abs(f2 - f1) <= df_max:
-                h = (f1 | (f2 << 10) | (dt << 20)) & 0xFFFFFFFF
-                pairs.append((h, t1))
-                count += 1
-                if count >= fan_out:
-                    break
-
-    return pairs
 
 def load_hash_db(path: str) -> Tuple[Dict[int, List[Tuple[int, int]]], Dict[int, str]]:
     """
@@ -233,6 +193,7 @@ def main():
         ("wide_t", 10, 100,  50, 3),
         ("wide_f", 10,  50, 100, 3),
         ("dense",  10,  50,  50, 6),
+        ("super_dense", 10, 60, 100, 15)
     ]
 
     all_rows: List[Row] = []
@@ -249,7 +210,6 @@ def main():
 
         index, song_map = load_hash_db(db_path)
         print(f"Loaded index: {len(index)} unique hashes, {len(song_map)} songs", flush=True)
-
         # per distortion
         for distortion, qfiles in queries.items():
             if not qfiles:

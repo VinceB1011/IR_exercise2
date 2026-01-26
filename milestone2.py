@@ -11,9 +11,9 @@ configs = [
     ("std", 10, 50, 50, 3),      # Deine aktuelle
     ("wide_t", 10, 100, 50, 3),   # Größeres Zeitfenster
     ("wide_f", 10, 50, 100, 3),   # Größeres Frequenzfenster
-    ("dense", 10, 50, 50, 6)      # Mehr Paare (Fan-out)
+    ("dense", 10, 50, 50, 6),      # Mehr Paare (Fan-out)
+    ("super_dense", 10, 60, 100, 15) # noch mehr Paare und größeres Zeit Fenster
 ]
-
 
 def run_indexing(config_name, dt_min, dt_max, df_max, fan_out):
   
@@ -62,8 +62,8 @@ def run_indexing(config_name, dt_min, dt_max, df_max, fan_out):
     print(f"Configuration {config_name} saved.")
 
 def main():
-    for name, t_min, t_max, f_max, fan in configs:
-        run_indexing(name, t_min, t_max, f_max, fan)
+    for name, dt_min, dt_max, df_max, fan_out in configs:
+        run_indexing(name, dt_min, dt_max, df_max, fan_out)
 
 if __name__ == "__main__":
     main()

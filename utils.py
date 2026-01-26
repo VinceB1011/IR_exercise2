@@ -1,10 +1,10 @@
 from scipy import ndimage
 import numpy as np
 
-def get_peaks(Y, k, t):
+def get_peaks(Y, k, t, thresh=0.01):
     size = (2*k + 1, 2*t + 1)
     result = ndimage.maximum_filter(Y, size=size, mode='constant')
-    cmap = (Y == result) & (Y > 0.01)
+    cmap = (Y == result) & (Y > thresh)
     return np.argwhere(cmap)
 
 def generate_hashes_from_peaks(peaks, dt_min, dt_max, df_max, fan_out):
@@ -30,9 +30,6 @@ def generate_hashes_from_peaks(peaks, dt_min, dt_max, df_max, fan_out):
                 # Example: pack f1 (10 bits), f2 (10 bits), and dt (12 bits)
 
                 hash_32 = (f1 | (f2 << 10) | (dt << 20)) & 0xFFFFFFFF
-
-                if i == 0 and count == 0:
-                    print(f"    [DEBUG] f1:{f1}, f2:{f2}, dt:{dt} -> Hash:{bin(hash_32)}")
                 
                 # 2. Store (hash, t1)
                 pairs.append((hash_32, t1))
@@ -40,5 +37,4 @@ def generate_hashes_from_peaks(peaks, dt_min, dt_max, df_max, fan_out):
                 count += 1
                 if count >= fan_out:
                     break
-    print(f"  > Pairs generated: {len(pairs)} (Avg fan-out: {len(pairs)/len(peaks):.2f})")
     return pairs
